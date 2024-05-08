@@ -1,42 +1,55 @@
 from flask import Flask, request, jsonify
-import joblib
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder  # Add this import
+import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+import joblib
 
 app = Flask(__name__)
 
-# Load models and scaler
+# Load the trained scaler and models
+scaler = joblib.load('scaler.pkl')
 linear_model = joblib.load('linear_regression_model.pkl')
 rf_model = joblib.load('random_forest_model.pkl')
 svm_model = joblib.load('svm_model.pkl')
 xgb_model = joblib.load('xgboost_model.pkl')
-scaler = joblib.load('scaler.pkl')
+
+# Define function to preprocess input data
+def preprocess_input(input_data):
+    # Convert input data to DataFrame
+    input_df = pd.DataFrame([input_data])
+
+    # Convert categorical variables to numerical using LabelEncoder
+    categorical_cols = ['Speed', 'Dribbling', 'Passing', 'Positioning', 'Crossing', 'Shooting', 
+                        'Aggression', 'Pressure', 'Team_width', 'Defender_line']
+    for col in categorical_cols:
+        input_df[col] = LabelEncoder().fit_transform(input_df[col])
+
+    # Return preprocessed input
+    return input_df
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.json
-
+    # Get input data from request
+    input_data = request.json
+    
     # Preprocess input data
-    input_features = pd.DataFrame(data, index=[0])
-    columns_to_drop = ['Name', 'Image', 'Name_URL', 'ID', 'Players', 'Passing1', 'Positioning2', 'Ligue', 'saison']
-    columns_to_drop = [col for col in columns_to_drop if col in input_features.columns]
-    input_features = input_features.drop(columns=columns_to_drop)
-    # input_features = input_features.drop(columns=['Name', 'Image', 'Name_URL', 'ID', 'Players', 'Passing1', 'Positioning2', 'Ligue', 'saison'])
-    for col in ['Speed', 'Dribbling', 'Passing', 'Positioning', 'Crossing', 'Shooting', 'Aggression', 'Pressure', 'Team_width', 'Defender_line']:
-        input_features[col] = LabelEncoder().fit_transform(input_features[col])
-    input_features_scaled = scaler.transform(input_features)
+    input_df = preprocess_input(input_data)
 
-    # Predict using models
-    linear_pred = linear_model.predict(input_features_scaled)[0]
-    rf_pred = rf_model.predict(input_features_scaled)[0]
-    svm_pred = svm_model.predict(input_features_scaled)[0]
-    xgb_pred = xgb_model.predict(input_features_scaled)[0]
+    # Scale input features
+    input_features_scaled = scaler.transform(input_df)
 
+    # Make predictions using each model
+    linear_pred = linear_model.predict(input_features_scaled)
+    rf_pred = rf_model.predict(input_features_scaled)
+    svm_pred = svm_model.predict(input_features_scaled)
+    xgb_pred = xgb_model.predict(input_features_scaled)
+
+    # Return predictions
     return jsonify({
-        'Linear Regression': linear_pred,
-        'Random Forest': rf_pred,
-        'SVM': svm_pred,
-        'XGBoost': xgb_pred
+        "linear_regression_prediction": float(linear_pred),
+        "random_forest_prediction": float(rf_pred),
+        "svm_prediction": float(svm_pred),
+        "xgboost_prediction": float(xgb_pred)
     })
 
 if __name__ == '__main__':

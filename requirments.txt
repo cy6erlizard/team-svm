@@ -1,3 +1,25 @@
 ###in local
 pip install xgboost 
 pip install scikit-learn==1.4.2
+
+
+
+--- test data:
+
+{
+    "Attack": 81,
+    "Midfield": 82,
+    "Defence": 82,
+    "Speed": "Fast",
+    "Dribbling": "Normal",
+    "Passing": "Mixed",
+    "Positioning": "Normal",
+    "Crossing": "Normal",
+    "Shooting": "Normal",
+    "Aggression": "Press",
+    "Pressure": "Medium",
+    "Team_width": "Normal",
+    "Defender_line": "Cover",
+    "Domestic_prestige": 20,
+    "International_prestige": 20
+}
