@@ -1,0 +1,3 @@
+###in local
+pip install xgboost 
+pip install scikit-learn==1.4.2
